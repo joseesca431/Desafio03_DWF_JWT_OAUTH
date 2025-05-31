@@ -35,11 +35,19 @@ public class User {
     @FutureOrPresent
     private LocalDate creationDate;
 
+    @Column(name = "oauth_provider")
+    private String oauthProvider;
+
+
     // Asegurar valores válidos
     public void setRole(String role) {
         if (!"ADMIN".equals(role) && !"USER".equals(role)) {
             throw new IllegalArgumentException("Rol inválido: " + role);
         }
         this.role = role;
+    }
+    // Metodo para verificar si es usuario OAuth
+    public boolean isOAuthUser() {
+        return oauthProvider != null && !oauthProvider.isEmpty();
     }
 }

@@ -16,7 +16,10 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import sv.edu.udb.security.AuthEntryPointJwt;
+import sv.edu.udb.security.CustomOAuth2UserService;
 import sv.edu.udb.security.JwtAuthenticationFilter;
+import sv.edu.udb.security.OAuth2AuthenticationSuccessHandler;
+
 
 @Configuration
 @EnableWebSecurity
@@ -24,7 +27,8 @@ import sv.edu.udb.security.JwtAuthenticationFilter;
 public class SecurityConfig {
     private final AuthEntryPointJwt unauthorizedHandler;
     private final JwtAuthenticationFilter authTokenFilter;
-
+    private final CustomOAuth2UserService customOAuth2UserService; // Añade esto
+    private final OAuth2AuthenticationSuccessHandler oauth2AuthenticationSuccessHandler;
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
@@ -57,7 +61,16 @@ public class SecurityConfig {
                                 .requestMatchers("/api/users/me").hasAnyRole("USER", "ADMIN")
                                 .requestMatchers(HttpMethod.POST, "/api/content").hasRole("ADMIN")
                                 .anyRequest().authenticated()
+                )
+                // Configuración OAuth2
+                .oauth2Login(oauth2Login ->
+                        oauth2Login
+                                .userInfoEndpoint(userInfo ->
+                                        userInfo.userService(customOAuth2UserService)
+                                )
+                                .successHandler(oauth2AuthenticationSuccessHandler)
                 );
+
         // Add the JWT Token filter before the UsernamePasswordAuthenticationFilter
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
